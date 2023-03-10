@@ -1,0 +1,10 @@
+# Basic .gitattributes file to try to get GitHub to acknowledge the MATLAB code (within the zip-file) as such.
+
+# Source files
+# ============
+*.m             text diff=matlab
+*.matlab        text diff=matlab
+
+# File type to be ignored
+# =======================
+*.md linguist-detectable=false
