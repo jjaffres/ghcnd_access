@@ -1,0 +1,96 @@
+function [data_unit,div] = ghcnd_units(unit_which,var_target)
+%% ghcnd_units.m
+% This function determines which data unit is extracted.
+% Original input units (tenths of mm, etc.) are adjusted (mm, etc.) if unit_which = 'SI'.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     J. Jaffrés - 14 Apr 2018
+
+%% First check whether you have selected 'SN**', 'SX**', 'WT**' or 'WV**' (or one of their subcategories)
+% Temporarily change the variable name (if a subgroup was selected) to determine the data unit:
+chk = char(var_target); chk = chk(1:2);
+if strcmp(chk,'SN') && not(strcmp(char(var_target),'SNOW')) && not(strcmp(char(var_target),'SNWD')) || ...
+        strcmp(chk,'SX') || strcmp(chk,'WT') || strcmp(chk,'WV')
+    var_target = [chk,'**']; 
+end
+
+%% Determine SI (metric) data unit
+if strcmp(var_target,'PRCP') || strcmp(var_target,'SNOW') || strcmp(var_target,'SNWD')...
+        || strcmp(var_target,'EVAP') || strcmp(var_target,'MDEV') || strcmp(var_target,'MDPR')...
+        || strcmp(var_target,'MDSF') || strcmp(var_target,'THIC') || strcmp(var_target,'WESD')...
+        || strcmp(var_target,'WESF')
+    SIunit = 'mm';
+elseif strcmp(var_target,'FRGB') || strcmp(var_target,'FRGT') || strcmp(var_target,'FRTH')...
+    || strcmp(var_target,'GAHT')
+    SIunit = 'cm';
+elseif strcmp(var_target,'MDWM') || strcmp(var_target,'WDMV')
+    SIunit = 'km';
+elseif strcmp(var_target,'TMAX') || strcmp(var_target,'TMIN') || strcmp(var_target,'MDTN')...
+        || strcmp(var_target,'MDTX') || strcmp(var_target,'MNPN') || strcmp(var_target,'MXPN')...
+        || strcmp(var_target,'SN**') || strcmp(var_target,'SX**') || strcmp(var_target,'TAVG')...
+        || strcmp(var_target,'TOBS')
+    SIunit = '°C';
+elseif strcmp(var_target,'AWDR') || strcmp(var_target,'WDF1') || strcmp(var_target,'WDF2')...
+        || strcmp(var_target,'WDF5') || strcmp(var_target,'WDFG') || strcmp(var_target,'WDFI')...
+        || strcmp(var_target,'WDFM')
+    SIunit = '°';
+elseif strcmp(var_target,'ACMC') || strcmp(var_target,'ACMH') || strcmp(var_target,'ACSC')...
+        || strcmp(var_target,'ACSH') || strcmp(var_target,'PSUN')
+    SIunit = '%';
+elseif strcmp(var_target,'AWND') || strcmp(var_target,'WSF1') || strcmp(var_target,'WSF2')...
+        || strcmp(var_target,'WSF5') || strcmp(var_target,'WSFG') || strcmp(var_target,'WSFI')...
+        || strcmp(var_target,'WSFM')
+    SIunit = 'm/s';
+elseif strcmp(var_target,'DAEV') || strcmp(var_target,'DAPR') || strcmp(var_target,'DASF')...
+        || strcmp(var_target,'DATN') || strcmp(var_target,'DATX') || strcmp(var_target,'DAWM')...
+        || strcmp(var_target,'DWPR')
+    SIunit = 'days';
+elseif strcmp(var_target,'FMTM') || strcmp(var_target,'PGTM')  
+    SIunit = 'time(HHMM)';
+elseif strcmp(var_target,'TSUN')  
+    SIunit = 'hours';
+elseif strcmp(var_target,'WT**')  
+    SIunit = 'Weather Type';
+else % strcmp(var_target,'WV**')  
+    SIunit = 'Weather in the Vicinity';
+end
+
+%% Do the extracted data have to be converted into regular SI units?
+if strcmp(unit_which,'SI') % SI units are exported.
+    if strcmp(var_target,'TMAX') || strcmp(var_target,'TMIN') || strcmp(var_target,'MDTN')...
+             || strcmp(var_target,'MDTX') || strcmp(var_target,'MNPN') || strcmp(var_target,'MXPN')...
+             || strcmp(var_target,'SN**') || strcmp(var_target,'SX**') || strcmp(var_target,'TAVG')...
+             || strcmp(var_target,'TOBS')
+        div = 10; 
+        disp('The original unit for temperature is "tenths of °C". Hence, divide values by 10 before exporting as °C.')
+    elseif strcmp(var_target,'PRCP') || strcmp(var_target,'EVAP') || strcmp(var_target,'MDEV')...
+             || strcmp(var_target,'MDPR') || strcmp(var_target,'THIC') || strcmp(var_target,'WESD')...
+             || strcmp(var_target,'WESF')
+        div = 10; 
+        disp(['The original unit for ',char(var_target),' is "tenths of mm". Hence, divide values by 10 before exporting as mm.'])
+    elseif strcmp(var_target,'AWND') || strcmp(var_target,'WSF1') || strcmp(var_target,'WSF2')...
+             || strcmp(var_target,'WSF5') || strcmp(var_target,'WSFG') || strcmp(var_target,'WSFI')...
+             || strcmp(var_target,'WSFM')
+        div = 10; 
+        disp('The original unit for wind speed is "tenths of m/s". Hence, divide values by 10 before exporting as m/s.')
+    elseif strcmp(var_target,'TSUN')
+        div = 60;
+        disp('The original unit for total sunshine is "minutes". Hence, divide values by 60 before exporting as hours.')
+    else
+        div = 1; % Original data are already in SI units.
+        disp(['The data are already in SI units (',SIunit,') by GHCN-Daily default.'])
+    end
+else % Original units are kept. Thus, unit name has to be altered.
+    div = 1;
+    if strcmp(var_target,'PRCP') || strcmp(var_target,'TMAX') || strcmp(var_target,'TMIN')...
+             || strcmp(var_target,'AWND') || strcmp(var_target,'EVAP') || strcmp(var_target,'MDEV')...
+             || strcmp(var_target,'MDPR') || strcmp(var_target,'MDTN') || strcmp(var_target,'MDTX')...
+             || strcmp(var_target,'MNPN') || strcmp(var_target,'MXPN') || strcmp(var_target,'SN**')...
+             || strcmp(var_target,'SX**') || strcmp(var_target,'TAVG') || strcmp(var_target,'THIC')...
+             || strcmp(var_target,'TOBS') || strcmp(var_target,'WESD') || strcmp(var_target,'WESF')...
+             || strcmp(var_target,'WSF1') || strcmp(var_target,'WSF2') || strcmp(var_target,'WSF5')...
+             || strcmp(var_target,'WSFG') || strcmp(var_target,'WSFI') || strcmp(var_target,'WSFM')
+         SIunit = {['tenths of ',SIunit]};
+    elseif strcmp(var_target,'TSUN')
+        SIunit = 'minutes';
+    end
+end
+data_unit = SIunit;
